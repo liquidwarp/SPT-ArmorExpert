@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>Liquidwarp.ArmorExpert</AssemblyName>
+    <Version>1.0.0</Version>
+    <RootNamespace>Liquidwarp.ArmorExpert</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>Shared\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>Shared\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="Comfort">
+      <HintPath>Shared\Comfort.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Serialization">
+      <HintPath>Shared\Sirenix.Serialization.dll</HintPath>
+    </Reference>
+    <Reference Include="ItemComponent.Types">
+      <HintPath>Shared\ItemComponent.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="SPT.Reflection">
+      <HintPath>Shared\spt-reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>Shared\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>Shared\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    Package the plugin as Releases\Liquidwarp.ArmorExpert.zip. The archive root
+    is the BepInEx folder, so it unpacks straight over an SPT install.
+
+    The SPT install is only ever READ from, to resolve the references above.
+    Nothing is written outside this project directory. Staging lives under obj\
+    so it stays gitignored.
+
+    Release-only, so a plain `dotnet build` (which defaults to Debug) stays a
+    quick compile check and can't overwrite a release artifact with a Debug DLL.
+  -->
+  <PropertyGroup>
+    <PackageStagingDir>$(ProjectDir)obj\package\</PackageStagingDir>
+    <ReleaseDir>$(ProjectDir)Releases\</ReleaseDir>
+    <ReleaseZip>$(ReleaseDir)$(AssemblyName).zip</ReleaseZip>
+  </PropertyGroup>
+
+  <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <RemoveDir Directories="$(PackageStagingDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageStagingDir)BepInEx\plugins\" />
+    <MakeDir Directories="$(ReleaseDir)" />
+    <ZipDirectory SourceDirectory="$(PackageStagingDir)" DestinationFile="$(ReleaseZip)" Overwrite="true" />
+    <Message Importance="high" Text="Packaged $(ReleaseZip)" />
+  </Target>
+
+</Project>
