@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>Liquidwarp.ArmorExpert</AssemblyName>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <RootNamespace>Liquidwarp.ArmorExpert</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
