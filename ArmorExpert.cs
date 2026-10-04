@@ -40,7 +40,7 @@ internal static class ArmorAttributes
         {
             Name = EArmorExtraAttributeId.Penetration.ToString(),
             DisplayNameFunc = () => "Penetrated at 50/100%",
-            Base = () => Penetration.Current(armor).Half,
+            Base = () => Penetration.IsDestroyed(armor) ? 0f : Penetration.Current(armor).Half,
             StringValue = () => Penetration.Summary(armor),
             DisplayType = () => EItemAttributeDisplayType.Compact,
         });
@@ -135,9 +135,13 @@ internal readonly struct Penetration
     public int BluntLow => Mathf.Max(1, Mathf.FloorToInt(_resistance - 0.8f / 0.03f));
     public float BluntLowFactor => Mathf.Clamp(1f - 0.03f * (_resistance - BluntLow), 0.2f, 1f);
 
+    public static bool IsDestroyed(ArmorComponent armor) => armor.Repairable.Durability <= 0f;
+
     // At current durability.
     public static string Summary(ArmorComponent armor)
     {
+        if (IsDestroyed(armor))
+            return "0 / 0";
         Penetration current = Current(armor);
         return $"{current.Half} / {current.Full}";
     }
@@ -152,6 +156,8 @@ internal static class Blunt
 
     public static string Summary(ArmorComponent armor)
     {
+        if (Penetration.IsDestroyed(armor))
+            return "None";
         float share = armor.BluntThroughput;
         Penetration current = Penetration.Current(armor);
         return $"{Format.Percent(share * current.BluntLowFactor, sign: false)}-{Format.Percent(share)} at "
