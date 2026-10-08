@@ -2,6 +2,7 @@ using Comfort.Common;
 using EFT;
 using EFT.ActiveHeadphones;
 using EFT.InventoryLogic;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -99,7 +100,7 @@ internal static class ArmorAttributes
             DisplayNameFunc = () => "Sound reduction",
             Base = () => (float)Hearing.Strength(equipment),
             StringValue = () => Hearing.Strength(equipment).ToString(),
-            Tooltip = () => "Only applies when no headset is worn. Can depend on attachments.",
+            Tooltip = () => Hearing.Details(equipment),
             DisplayType = () => EItemAttributeDisplayType.Compact,
             LessIsGood = true,
         });
@@ -292,6 +293,32 @@ internal static class Hearing
             .Select(component => component.Deaf)
             .Append(equipment._template.DeafStrength)
             .Max();
+
+    public static string Details(ArmoredEquipment equipment)
+    {
+        var lines = new List<string> { "Only applies when no headset is worn. Can depend on attachments." };
+        if (equipment is FaceCover)
+            lines.Add("Only applies if the helmet doesn't reduce sound.");
+
+        string[] sources = Sources(equipment);
+        if (sources.Length > 0)
+            lines.Add("From: " + string.Join(", ", sources));
+
+        return string.Join("\n", lines);
+    }
+
+    private static string[] Sources(ArmoredEquipment equipment)
+    {
+        EDeafStrength strength = Strength(equipment);
+        if (strength == EDeafStrength.None || equipment._template.DeafStrength == strength)
+            return [];
+
+        return equipment.GetItemComponentsInChildren<CompositeArmorComponent>()
+            .Where(component => component.Deaf == strength && component.Item != equipment)
+            .Select(component => component.Item.ShortName.Localized())
+            .Distinct()
+            .ToArray();
+    }
 }
 
 internal static class Durability
