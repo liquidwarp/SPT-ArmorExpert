@@ -1,13 +1,14 @@
 using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
+using System.Linq;
 using UnityEngine;
 
 namespace Liquidwarp.ArmorExpert;
 
 internal enum EArmorExtraAttributeId
 {
-    Deflection, Penetration, BluntThroughput, SoftBluntReduction, EffectiveDurability
+    Deflection, Penetration, BluntThroughput, SoftBluntReduction, EffectiveDurability, SoundReduction
 }
 
 internal static class ArmorAttributes
@@ -19,6 +20,7 @@ internal static class ArmorAttributes
         EArmorExtraAttributeId.BluntThroughput => EItemAttributeId.MaxAmmoDamage,
         EArmorExtraAttributeId.SoftBluntReduction => EItemAttributeId.MaxAmmoDamage,
         EArmorExtraAttributeId.EffectiveDurability => EItemAttributeId.ArmorMaterial,
+        EArmorExtraAttributeId.SoundReduction => EItemAttributeId.Loudness,
         _ => EItemAttributeId.Undefined,
     };
 
@@ -77,6 +79,23 @@ internal static class ArmorAttributes
             StringValue = () => Format.WithMax(Durability.EffectiveCurrent(armor).ToString("0"), Durability.EffectiveMax(armor).ToString("0")),
             Tooltip = () => Durability.Details(armor),
             DisplayType = () => EItemAttributeDisplayType.Compact,
+        });
+    }
+
+    public static void AddExtraAttributes(this ArmoredEquipment equipment)
+    {
+        if (!Hearing.IsShown(equipment))
+            return;
+
+        equipment.Attributes.Add(new ItemAttribute(EArmorExtraAttributeId.SoundReduction)
+        {
+            Name = EArmorExtraAttributeId.SoundReduction.ToString(),
+            DisplayNameFunc = () => "Sound reduction",
+            Base = () => (float)Hearing.Strength(equipment),
+            StringValue = () => Hearing.Strength(equipment).ToString(),
+            Tooltip = () => "Only applies when no headset is worn. Can depend on attachments.",
+            DisplayType = () => EItemAttributeDisplayType.Compact,
+            LessIsGood = true,
         });
     }
 }
@@ -163,6 +182,22 @@ internal static class Blunt
         return $"{Format.Percent(share * current.BluntLowFactor, sign: false)}-{Format.Percent(share)} at "
             + $"{current.BluntLow}-{current.BluntFull}";
     }
+}
+
+internal static class Hearing
+{
+    public static bool IsShown(ArmoredEquipment equipment) =>
+        IsArmoredHeadGear(equipment) || Strength(equipment) != EDeafStrength.None;
+
+    private static bool IsArmoredHeadGear(ArmoredEquipment equipment) =>
+        equipment is Headwear or FaceCover
+        && (equipment.Armor != null || equipment.Slots.Any(slot => slot is ArmorSlot));
+
+    public static EDeafStrength Strength(ArmoredEquipment equipment) =>
+        equipment.GetItemComponentsInChildren<CompositeArmorComponent>()
+            .Select(component => component.Deaf)
+            .Append(equipment._template.DeafStrength)
+            .Max();
 }
 
 internal static class Durability

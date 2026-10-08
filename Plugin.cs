@@ -15,6 +15,7 @@ public class Plugin : BaseUnityPlugin
     {
         new StaticIconsPatch().Enable();
         new ArmorComponentPatch().Enable();
+        new ArmoredEquipmentPatch().Enable();
     }
 }
 
@@ -43,5 +44,15 @@ internal class ArmorComponentPatch : ModulePatch
 
     [PatchPostfix]
     private static void PatchPostfix(ArmorComponent __instance) =>
+        __instance.AddExtraAttributes();
+}
+
+internal class ArmoredEquipmentPatch : ModulePatch
+{
+    protected override MethodBase GetTargetMethod() =>
+        typeof(ArmoredEquipment).GetConstructor([typeof(string), typeof(ArmoredEquipmentTemplate)]);
+
+    [PatchPostfix]
+    private static void PatchPostfix(ArmoredEquipment __instance) =>
         __instance.AddExtraAttributes();
 }
