@@ -16,6 +16,7 @@ public class Plugin : BaseUnityPlugin
         new StaticIconsPatch().Enable();
         new ArmorComponentPatch().Enable();
         new ArmoredEquipmentPatch().Enable();
+        new HeadphonesPatch().Enable();
     }
 }
 
@@ -54,5 +55,15 @@ internal class ArmoredEquipmentPatch : ModulePatch
 
     [PatchPostfix]
     private static void PatchPostfix(ArmoredEquipment __instance) =>
+        __instance.AddExtraAttributes();
+}
+
+internal class HeadphonesPatch : ModulePatch
+{
+    protected override MethodBase GetTargetMethod() =>
+        typeof(Headphones).GetConstructor([typeof(string), typeof(HeadphonesTemplate)]);
+
+    [PatchPostfix]
+    private static void PatchPostfix(Headphones __instance) =>
         __instance.AddExtraAttributes();
 }

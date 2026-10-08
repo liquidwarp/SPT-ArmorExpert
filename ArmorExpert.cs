@@ -1,5 +1,6 @@
 using Comfort.Common;
 using EFT;
+using EFT.ActiveHeadphones;
 using EFT.InventoryLogic;
 using System.Linq;
 using UnityEngine;
@@ -8,7 +9,8 @@ namespace Liquidwarp.ArmorExpert;
 
 internal enum EArmorExtraAttributeId
 {
-    Deflection, Penetration, BluntThroughput, SoftBluntReduction, EffectiveDurability, SoundReduction
+    Deflection, Penetration, BluntThroughput, SoftBluntReduction, EffectiveDurability, SoundReduction,
+    SelfNoise, AmbientNoise, Distortion, Tone
 }
 
 internal static class ArmorAttributes
@@ -21,6 +23,10 @@ internal static class ArmorAttributes
         EArmorExtraAttributeId.SoftBluntReduction => EItemAttributeId.MaxAmmoDamage,
         EArmorExtraAttributeId.EffectiveDurability => EItemAttributeId.ArmorMaterial,
         EArmorExtraAttributeId.SoundReduction => EItemAttributeId.Loudness,
+        EArmorExtraAttributeId.SelfNoise => EItemAttributeId.Loudness,
+        EArmorExtraAttributeId.AmbientNoise => EItemAttributeId.Loudness,
+        EArmorExtraAttributeId.Distortion => EItemAttributeId.Loudness,
+        EArmorExtraAttributeId.Tone => EItemAttributeId.Loudness,
         _ => EItemAttributeId.Undefined,
     };
 
@@ -98,6 +104,94 @@ internal static class ArmorAttributes
             LessIsGood = true,
         });
     }
+
+    public static void AddExtraAttributes(this Headphones headphones)
+    {
+        HeadphonesTemplate template = headphones.Template;
+
+        headphones.Attributes.Add(new ItemAttribute(EArmorExtraAttributeId.SelfNoise)
+        {
+            Name = EArmorExtraAttributeId.SelfNoise.ToString(),
+            DisplayNameFunc = () => "Self noise",
+            Base = () => template.ClientPlayerCompressorSendLevel,
+            StringValue = () => Format.Decibels(template.ClientPlayerCompressorSendLevel),
+            Tooltip = () => "Player sounds: steps, rustle, etc",
+            DisplayType = () => EItemAttributeDisplayType.Compact,
+            LessIsGood = true,
+        });
+
+        headphones.Attributes.Add(new ItemAttribute(EArmorExtraAttributeId.AmbientNoise)
+        {
+            Name = EArmorExtraAttributeId.AmbientNoise.ToString(),
+            DisplayNameFunc = () => "Ambient noise",
+            Base = () => template.AmbientCompressorSendLevel,
+            StringValue = () => Format.Decibels(template.AmbientCompressorSendLevel),
+            DisplayType = () => EItemAttributeDisplayType.Compact,
+            LessIsGood = true,
+        });
+
+        headphones.Attributes.Add(new ItemAttribute(EArmorExtraAttributeId.Distortion)
+        {
+            Name = EArmorExtraAttributeId.Distortion.ToString(),
+            DisplayNameFunc = () => "Distortion",
+            Base = () => template.Distortion,
+            StringValue = () => Format.Percent(template.Distortion),
+            DisplayType = () => EItemAttributeDisplayType.Compact,
+            LessIsGood = true,
+        });
+
+        headphones.Attributes.Add(new ItemAttribute(EArmorExtraAttributeId.Tone)
+        {
+            Name = EArmorExtraAttributeId.Tone.ToString(),
+            DisplayNameFunc = () => "Tone",
+            StringValue = () => Tone.Summary(template),
+            Tooltip = () => Tone.Details(template),
+            DisplayType = () => EItemAttributeDisplayType.Compact,
+        });
+    }
+}
+
+internal static class Tone
+{
+    private const float FlatThreshold = 0.5f; // dB
+    private const float CutThreshold = -2f; // dB
+
+    private static EQBand[] Bands(HeadphonesTemplate template) =>
+        [template.GetEQBand1(), template.GetEQBand2(), template.GetEQBand3()];
+
+    // The mixer's EQ gains are linear multipliers.
+    private static float Decibels(EQBand band) => 20f * Mathf.Log10(band.Gain);
+
+    private static string Range(float frequency) => frequency switch
+    {
+        < 500f => "low",
+        < 2000f => "mid",
+        < 4500f => "upper-mid",
+        _ => "treble",
+    };
+
+    // Named after the strongest cut if any, else the strongest boost. Ties list every range involved.
+    public static string Summary(HeadphonesTemplate template)
+    {
+        EQBand[] bands = Bands(template);
+        float lowest = bands.Min(Decibels), highest = bands.Max(Decibels);
+
+        bool cut = lowest <= CutThreshold;
+        float peak = cut ? lowest : highest;
+        if (!cut && peak < FlatThreshold)
+            return "Flat";
+
+        string ranges = string.Join("/", bands
+            .Where(band => Mathf.Abs(Decibels(band) - peak) < 0.05f)
+            .Select(band => Range(band.Frequency))
+            .Distinct());
+        return char.ToUpper(ranges[0]) + ranges.Substring(1) + (cut ? " cut" : " boost");
+    }
+
+    public static string Details(HeadphonesTemplate template) =>
+        $"Bass cut below {Format.Frequency(template.HighpassFreq)}\n"
+        + string.Join("\n", Bands(template).Select(band =>
+            $"{Format.Frequency(band.Frequency)}: {Decibels(band):+0.0;-0.0;0.0} dB"));
 }
 
 internal readonly struct Deflection(ArmorComponent armor)
@@ -227,6 +321,11 @@ internal static class Format
         (fraction * 100f).ToString("0.#") + (sign ? "%" : "");
 
     public static string Angle(float degrees) => degrees.ToString("0.#") + "°";
+
+    public static string Decibels(float decibels) => decibels.ToString("0.#") + " dB";
+
+    public static string Frequency(float hertz) =>
+        hertz < 1000f ? hertz.ToString("0") + " Hz" : (hertz / 1000f).ToString("0.#") + " kHz";
 
     public static string WithMax(object current, object max)
     {
