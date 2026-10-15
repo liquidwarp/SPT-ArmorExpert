@@ -37,12 +37,13 @@ internal static class ArmorAttributes
             Name = Names[(int)id],
             DisplayNameFunc = () => displayName,
             StringValue = value,
-            Tooltip = tooltip,
             DisplayType = () => EItemAttributeDisplayType.Compact,
             LessIsGood = lessIsGood,
         };
         if (@base != null)
             attribute.Base = @base;
+        if (tooltip != null)
+            attribute.Tooltip = tooltip;
         return attribute;
     }
 
