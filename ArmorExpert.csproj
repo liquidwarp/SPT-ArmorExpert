@@ -7,9 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Reference Include="0Harmony">
-            <HintPath>$(SPTPath)\BepInEx\core\0Harmony.dll</HintPath>
-        </Reference>
         <Reference Include="Assembly-CSharp">
             <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
         </Reference>
@@ -21,9 +18,6 @@
         </Reference>
         <Reference Include="ItemComponent.Types">
             <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
-        </Reference>
-        <Reference Include="Sirenix.Serialization">
-            <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
         </Reference>
         <Reference Include="spt-reflection">
             <HintPath>$(SPTPath)\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
