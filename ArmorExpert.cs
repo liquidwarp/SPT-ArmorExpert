@@ -183,9 +183,13 @@ internal static class Tone
             return "Flat";
 
         string ranges = string.Join("/", bands
-            .Where(band => Mathf.Abs(Decibels(band) - peak) < 0.05f)
-            .Select(band => Range(band.Frequency))
+            .Select(Decibels)
+            .Zip(bands, (decibels, band) => (decibels, band))
+            .Where(x => x.decibels == peak || Mathf.Abs(x.decibels - peak) < 0.05f)
+            .Select(x => Range(x.band.Frequency))
             .Distinct());
+        if (ranges.Length == 0) // NaN gains from a negative multiplier
+            return "Unknown";
         return char.ToUpper(ranges[0]) + ranges.Substring(1) + (cut ? " cut" : " boost");
     }
 
