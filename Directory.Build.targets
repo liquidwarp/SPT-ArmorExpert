@@ -1,0 +1,39 @@
+<Project>
+
+    <Target Name="GenerateMyModInfo" BeforeTargets="CoreCompile">
+        <PropertyGroup>
+            <MyModInfoFile>$(IntermediateOutputPath)MyModInfo.g.cs</MyModInfoFile>
+            <MyModInfoText><![CDATA[
+namespace $(RootNamespace)%3B
+
+internal static class MyModInfo
+{
+    public const string MOD_GUID = "$(ModGuid)"%3B
+    public const string MOD_NAME = "$(Product)"%3B
+    public const string MOD_AUTHOR = "$(Authors)"%3B
+    public const string MOD_VERSION = "$(Version)"%3B
+    public const string CLIENT_SPT_VERSION = "$(ClientSPTVersion)"%3B
+}
+]]></MyModInfoText>
+        </PropertyGroup>
+        <WriteLinesToFile File="$(MyModInfoFile)" Lines="$(MyModInfoText)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+        <ItemGroup>
+            <Compile Include="$(MyModInfoFile)" />
+            <FileWrites Include="$(MyModInfoFile)" />
+        </ItemGroup>
+    </Target>
+
+    <Target Name="InstallMod" AfterTargets="PostBuildEvent" Condition="'$(InstallMod)' == 'True'">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SPTPath)\$(ModDir)">
+            <Output TaskParameter="CopiedFiles" ItemName="InstalledFiles" />
+        </Copy>
+        <Message Importance="High" Text="$(MSBuildProjectName) installed to @(InstalledFiles->'%(FullPath)')" />
+    </Target>
+
+    <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(PackageRelease)' == 'True'">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ReleaseDir)\$(ModDir)">
+            <Output TaskParameter="CopiedFiles" ItemName="PackagedFiles" />
+        </Copy>
+        <Message Importance="High" Text="$(MSBuildProjectName) packaged to @(PackagedFiles->'%(FullPath)')" />
+    </Target>
+</Project>

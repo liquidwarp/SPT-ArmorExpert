@@ -1,0 +1,20 @@
+<Project>
+
+    <PropertyGroup>
+        <Authors>Liquidwarp</Authors>
+        <ModName>ArmorExpert</ModName>
+        <ModGuidPrefix>net.liquidwarp</ModGuidPrefix>
+        <Version>3.0.0</Version>
+        <ClientSPTVersion>4.1.6</ClientSPTVersion>
+        <Product>$(ModName)</Product>
+        <RootNamespace>$(Authors).$(MSBuildProjectName)</RootNamespace>
+        <AssemblyName>$(Authors)-$(MSBuildProjectName)</AssemblyName>
+        <ModGuid>$(ModGuidPrefix).$(ModName.ToLowerInvariant())</ModGuid>
+        <ReleaseDir>$(MSBuildThisFileDirectory)releases\$(Authors)-$(ModName)-$(Version)</ReleaseDir>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DebugType>None</DebugType>
+        <GenerateDependencyFile>false</GenerateDependencyFile>
+    </PropertyGroup>
+</Project>

@@ -1,12 +1,3 @@
-# Build output
-bin/
-obj/
-Releases/
-
-# Reference assemblies copied in from the SPT install (see build.ps1)
-Shared/
-
-# IDE
-.vs/
-.idea/
-*.user
+bin
+obj
+releases

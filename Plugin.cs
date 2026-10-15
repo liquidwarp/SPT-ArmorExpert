@@ -8,7 +8,8 @@ using UnityEngine;
 
 namespace Liquidwarp.ArmorExpert;
 
-[BepInPlugin("com.liquidwarp.armorexpert", "Liquidwarp.ArmorExpert", "2.0.0")]
+[BepInPlugin(MyModInfo.MOD_GUID, MyModInfo.MOD_NAME, MyModInfo.MOD_VERSION)]
+[BepInDependency("com.SPT.custom", MyModInfo.CLIENT_SPT_VERSION)]
 public class Plugin : BaseUnityPlugin
 {
     private void Awake()

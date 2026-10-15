@@ -1,0 +1,9 @@
+<Project>
+    <Target Name="CleanRelease" BeforeTargets="Build;Rebuild" Condition="'$(PackageRelease)' == 'True'">
+        <RemoveDir Directories="$(ReleaseDir)" />
+    </Target>
+
+    <Target Name="ZipRelease" AfterTargets="Build;Rebuild" Condition="'$(PackageRelease)' == 'True'">
+        <ZipDirectory SourceDirectory="$(ReleaseDir)" DestinationFile="$(ReleaseDir).zip" Overwrite="true" />
+    </Target>
+</Project>
